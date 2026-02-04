@@ -16,7 +16,7 @@
         - __workflow_loop_item.simplified_workflow_nodes is defined
 
     - name: Managing Workflows
-      ansible.controller.workflow_job_template:
+      awx.awx.workflow_job_template:
         name: "{{ __workflow_loop_item.name | mandatory }}"
         new_name: "{{ __workflow_loop_item.new_name | default(omit, true) }}"
         copy_from: "{{ __workflow_loop_item.copy_from | default(omit, true) }}"

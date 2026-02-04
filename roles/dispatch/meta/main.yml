@@ -40,7 +40,7 @@ galaxy_info:
 
 collections:
   - ansible.platform
-  - ansible.controller
+  - awx.awx
   - ansible.hub
   - ansible.eda
   - awx.awx

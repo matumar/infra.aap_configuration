@@ -6,7 +6,7 @@ An Ansible Role to add Organizations on Ansible Automation gateway.
 
 ## Requirements
 
-This role requires both `ansible.platform` and `ansible.controller` collections. Note that the `awx.awx` collection will not work with this role. See the `controller_organizations` role for the AWX/Controller only implementation.
+This role requires both `ansible.platform` and `awx.awx` collections. Note that the `awx.awx` collection will not work with this role. See the `controller_organizations` role for the AWX/Controller only implementation.
 
 ## Variables
 

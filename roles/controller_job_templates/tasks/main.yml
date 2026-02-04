@@ -5,7 +5,7 @@
   no_log: "{{ controller_configuration_job_templates_secure_logging }}"
   block:
     - name: Managing Controller Job Templates
-      ansible.controller.job_template:
+      awx.awx.job_template:
         name: "{{ __controller_template_item.name | mandatory }}"
         new_name: "{{ __controller_template_item.new_name | default(omit, true) }}"
         copy_from: "{{ __controller_template_item.copy_from | default(omit, true) }}"

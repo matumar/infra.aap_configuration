@@ -83,7 +83,7 @@ This also speeds up the overall role.
 |`last_name`|""|no|str|The last name of the user|
 |`is_superuser`|false|no|bool|Whether the user is a superuser|
 |`is_system_auditor`|false|no|bool|Whether the user is an auditor|
-|`organization`|""|no|str|The name of the organization the user belongs to.<br />Added in awx.awx >= 20.0.0 DOES NOT exist in ansible.controller yet.|
+|`organization`|""|no|str|The name of the organization the user belongs to.<br />Added in awx.awx >= 20.0.0 DOES NOT exist in awx.awx yet.|
 |`state`|`present`|no|str|Desired state of the resource.|
 |`register`|""|no|str|Variable to set based on the result of the object creation/modification|
 |`update_secrets`|true|no|bool| true will always change password if user specifies password, even if API gives $encrypted$ for password. false will only set the password if other values change too.|

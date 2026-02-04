@@ -37,7 +37,7 @@ galaxy_info:
     - organizations
 
 collections:
-  - ansible.controller
+  - awx.awx
 
 dependencies:
   # List your role dependencies here, one per line. Be sure to remove the '[]' above,

@@ -38,7 +38,7 @@
     - not controller_license.manifest is defined
 
 - name: manifest | Install the Controller license
-  ansible.controller.license:
+  awx.awx.license:
     manifest: "{{ __controller_manifest_path | default(omit) }}"
     subscription_id: "{{ controller_license.subscription_id | default(omit) }}"
     force: "{{ controller_license.force | default(omit) }}"

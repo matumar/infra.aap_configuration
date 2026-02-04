@@ -1,7 +1,7 @@
 ---
 # Launch Controller Workflow
 - name: Launch a Controller Workflow
-  ansible.controller.workflow_launch:
+  awx.awx.workflow_launch:
     name: "{{ __workflow_launch_item.name | mandatory }}"
     organization: "{{ __workflow_launch_item.organization | default(omit, true) }}"
     inventory: "{{ __workflow_launch_item.inventory | default(omit, true) }}"
