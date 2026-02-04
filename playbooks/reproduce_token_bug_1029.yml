@@ -8,7 +8,7 @@
     aap_hostname: "https://10.205.212.145"
     aap_validate_certs: false
     # Токен из переменной окружения Job Template
-    env_token: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN') }}"
+    env_token: "{{ CONTROLLER_OAUTH_TOKEN | default('') }}"
 
   tasks:
     - name: Check token is available
