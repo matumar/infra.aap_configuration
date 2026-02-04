@@ -1,0 +1,92 @@
+---
+- name: Reproduce token loss bug in infra.aap_configuration
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    # Шаг 1: Получаем токен
+    - name: Create OAuth token
+      ansible.controller.token:
+        description: 'Token for testing bug #1029'
+        scope: "write"
+        state: present
+        controller_host: "https://10.205.212.145"
+        controller_username: "admin"
+        controller_password: "admin"
+        validate_certs: false
+      register: token_result
+
+    # Шаг 2: НЕПРАВИЛЬНЫЙ способ - передача через vars (будет падать)
+    - name: Try to use token via vars (WILL FAIL intermittently)
+      vars:
+        aap_hostname: "https://10.205.212.145"
+        aap_token: "{{ token_result.ansible_facts.tower_token.token }}"
+        aap_validate_certs: false
+        controller_organizations:
+          - name: "Bug Test Org"
+            description: "Organization for testing token bug"
+        controller_projects:
+          - name: "Bug Test Project"
+            organization: "Bug Test Org"
+            scm_type: "git"
+            scm_url: "https://github.com/ansible/ansible-tower-samples"
+        controller_credentials:
+          - name: "Bug Test Credential"
+            credential_type: "Machine"
+            organization: "Bug Test Org"
+      include_role:
+        name: "{{ item }}"
+      loop:
+        - infra.aap_configuration.controller_organizations
+        - infra.aap_configuration.controller_projects
+        - infra.aap_configuration.controller_credentials
+      ignore_errors: true
+      register: result_without_set_fact
+
+    - name: Show result without set_fact
+      ansible.builtin.debug:
+        msg: "Without set_fact - Failed: {{ result_without_set_fact.failed }}"
+
+    # Шаг 3: ПРАВИЛЬНЫЙ способ - через set_fact (должно работать)
+    - name: Set token as fact (CORRECT WAY)
+      ansible.builtin.set_fact:
+        aap_hostname: "https://10.205.212.145"
+        aap_token: "{{ token_result.ansible_facts.tower_token.token }}"
+        aap_validate_certs: false
+        controller_organizations:
+          - name: "Bug Test Org Fixed"
+            description: "Organization with set_fact workaround"
+        controller_projects:
+          - name: "Bug Test Project Fixed"
+            organization: "Bug Test Org Fixed"
+            scm_type: "git"
+            scm_url: "https://github.com/ansible/ansible-tower-samples"
+        controller_credentials:
+          - name: "Bug Test Credential Fixed"
+            credential_type: "Machine"
+            organization: "Bug Test Org Fixed"
+
+    - name: Use roles with set_fact (should work)
+      include_role:
+        name: "{{ item }}"
+      loop:
+        - infra.aap_configuration.controller_organizations
+        - infra.aap_configuration.controller_projects
+        - infra.aap_configuration.controller_credentials
+      register: result_with_set_fact
+
+    - name: Show result with set_fact
+      ansible.builtin.debug:
+        msg: "With set_fact - Success!"
+
+    # Cleanup
+    - name: Cleanup - Delete test token
+      ansible.controller.token:
+        description: 'Token for testing bug #1029'
+        state: absent
+        controller_host: "https://10.205.212.145"
+        controller_username: "admin"
+        controller_password: "admin"
+        validate_certs: false
+        existing_token: "{{ token_result.ansible_facts.tower_token.token }}"
