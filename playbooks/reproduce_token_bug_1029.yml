@@ -5,9 +5,8 @@
   gather_facts: false
 
   vars:
-    aap_hostname: "https://10.205.212.145"
-    aap_validate_certs: false
-    # Токен из переменной окружения Job Template
+    aap_hostname: "{{ aap_hostname | default('https://10.205.212.145') }}"
+    aap_validate_certs: "{{ aap_validate_certs | default(false) }}"
     env_token: "{{ CONTROLLER_OAUTH_TOKEN | default('') }}"
 
   tasks:
@@ -18,10 +17,10 @@
 
     - name: Fail if no token
       ansible.builtin.fail:
-        msg: "CONTROLLER_OAUTH_TOKEN environment variable is not set!"
+        msg: "CONTROLLER_OAUTH_TOKEN variable is not set in Extra Variables!"
       when: env_token | length == 0
 
-    # Шаг 1: НЕПРАВИЛЬНЫЙ способ - передача через vars (будет падать)
+    # Шаг 1: НЕПРАВИЛЬНЫЙ способ - передача через vars
     - name: Try to use token via vars (WILL FAIL intermittently)
       vars:
         aap_token: "{{ env_token }}"
@@ -40,9 +39,9 @@
       include_role:
         name: "{{ item }}"
       loop:
-        - infra.aap_configuration.controller_organizations
-        - infra.aap_configuration.controller_projects
-        - infra.aap_configuration.controller_credentials
+        - controller_organizations  # БЕЗ префикса infra.aap_configuration
+        - controller_projects
+        - controller_credentials
       ignore_errors: true
       register: result_without_set_fact
 
@@ -53,7 +52,7 @@
           - "Failed: {{ result_without_set_fact.failed | default(false) }}"
           - "Changed: {{ result_without_set_fact.changed | default(false) }}"
 
-    # Шаг 2: ПРАВИЛЬНЫЙ способ - через set_fact (должно работать)
+    # Шаг 2: ПРАВИЛЬНЫЙ способ - через set_fact
     - name: Set token as fact (CORRECT WAY)
       ansible.builtin.set_fact:
         aap_token: "{{ env_token }}"
@@ -74,9 +73,9 @@
       include_role:
         name: "{{ item }}"
       loop:
-        - infra.aap_configuration.controller_organizations
-        - infra.aap_configuration.controller_projects
-        - infra.aap_configuration.controller_credentials
+        - controller_organizations  # БЕЗ префикса
+        - controller_projects
+        - controller_credentials
       register: result_with_set_fact
 
     - name: Show result with set_fact
