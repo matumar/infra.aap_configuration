@@ -17,16 +17,15 @@
 
     - name: Fail if no token
       ansible.builtin.fail:
-        msg: "CONTROLLER_OAUTH_TOKEN variable is not set in Extra Variables!"
+        msg: "CONTROLLER_OAUTH_TOKEN variable is not set!"
       when: env_token | length == 0
 
-    # Шаг 1: НЕПРАВИЛЬНЫЙ способ - передача через vars
+    # Шаг 1: НЕПРАВИЛЬНЫЙ способ
     - name: Try to use token via vars (WILL FAIL intermittently)
       vars:
         aap_token: "{{ env_token }}"
         controller_organizations:
           - name: "Bug Test Org"
-            description: "Organization for testing token bug"
         controller_projects:
           - name: "Bug Test Project"
             organization: "Bug Test Org"
@@ -38,27 +37,23 @@
             organization: "Bug Test Org"
       include_role:
         name: "{{ item }}"
+        apply:
+          vars:
+            # Убедитесь что переменные видны внутри роли
+            ansible_search_path: "{{ playbook_dir }}/../roles"
       loop:
-        - controller_organizations  # БЕЗ префикса infra.aap_configuration
+        - controller_organizations
         - controller_projects
         - controller_credentials
       ignore_errors: true
       register: result_without_set_fact
 
-    - name: Show result without set_fact
-      ansible.builtin.debug:
-        msg:
-          - "========== Result WITHOUT set_fact =========="
-          - "Failed: {{ result_without_set_fact.failed | default(false) }}"
-          - "Changed: {{ result_without_set_fact.changed | default(false) }}"
-
-    # Шаг 2: ПРАВИЛЬНЫЙ способ - через set_fact
+    # Шаг 2: ПРАВИЛЬНЫЙ способ
     - name: Set token as fact (CORRECT WAY)
       ansible.builtin.set_fact:
         aap_token: "{{ env_token }}"
         controller_organizations:
           - name: "Bug Test Org Fixed"
-            description: "Organization with set_fact workaround"
         controller_projects:
           - name: "Bug Test Project Fixed"
             organization: "Bug Test Org Fixed"
@@ -69,18 +64,14 @@
             credential_type: "Machine"
             organization: "Bug Test Org Fixed"
 
-    - name: Use roles with set_fact (should work)
+    - name: Use roles with set_fact
       include_role:
         name: "{{ item }}"
       loop:
-        - controller_organizations  # БЕЗ префикса
+        - controller_organizations
         - controller_projects
         - controller_credentials
-      register: result_with_set_fact
 
-    - name: Show result with set_fact
+    - name: Show success
       ansible.builtin.debug:
-        msg:
-          - "========== Result WITH set_fact =========="
-          - "Success!"
-          - "Changed: {{ result_with_set_fact.changed | default(false) }}"
+        msg: "Test completed!"
