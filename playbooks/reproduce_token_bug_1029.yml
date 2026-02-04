@@ -4,25 +4,27 @@
   connection: local
   gather_facts: false
 
-  tasks:
-    # Шаг 1: Получаем токен
-    - name: Create OAuth token
-      awx.awx.token:
-        description: 'Token for testing bug #1029'
-        scope: "write"
-        state: present
-        controller_host: "https://10.205.212.145"
-        controller_username: "admin"
-        controller_password: "admin"
-        validate_certs: false
-      register: token_result
+  vars:
+    aap_hostname: "https://10.205.212.145"
+    aap_validate_certs: false
+    # Токен из переменной окружения Job Template
+    env_token: "{{ lookup('env', 'CONTROLLER_OAUTH_TOKEN') }}"
 
-    # Шаг 2: НЕПРАВИЛЬНЫЙ способ - передача через vars (будет падать)
+  tasks:
+    - name: Check token is available
+      ansible.builtin.debug:
+        msg: "Token found: {{ env_token[:10] }}..."
+      when: env_token | length > 0
+
+    - name: Fail if no token
+      ansible.builtin.fail:
+        msg: "CONTROLLER_OAUTH_TOKEN environment variable is not set!"
+      when: env_token | length == 0
+
+    # Шаг 1: НЕПРАВИЛЬНЫЙ способ - передача через vars (будет падать)
     - name: Try to use token via vars (WILL FAIL intermittently)
       vars:
-        aap_hostname: "https://10.205.212.145"
-        aap_token: "{{ token_result.ansible_facts.tower_token.token }}"
-        aap_validate_certs: false
+        aap_token: "{{ env_token }}"
         controller_organizations:
           - name: "Bug Test Org"
             description: "Organization for testing token bug"
@@ -46,14 +48,15 @@
 
     - name: Show result without set_fact
       ansible.builtin.debug:
-        msg: "Without set_fact - Failed: {{ result_without_set_fact.failed }}"
+        msg:
+          - "========== Result WITHOUT set_fact =========="
+          - "Failed: {{ result_without_set_fact.failed | default(false) }}"
+          - "Changed: {{ result_without_set_fact.changed | default(false) }}"
 
-    # Шаг 3: ПРАВИЛЬНЫЙ способ - через set_fact (должно работать)
+    # Шаг 2: ПРАВИЛЬНЫЙ способ - через set_fact (должно работать)
     - name: Set token as fact (CORRECT WAY)
       ansible.builtin.set_fact:
-        aap_hostname: "https://10.205.212.145"
-        aap_token: "{{ token_result.ansible_facts.tower_token.token }}"
-        aap_validate_certs: false
+        aap_token: "{{ env_token }}"
         controller_organizations:
           - name: "Bug Test Org Fixed"
             description: "Organization with set_fact workaround"
@@ -78,15 +81,7 @@
 
     - name: Show result with set_fact
       ansible.builtin.debug:
-        msg: "With set_fact - Success!"
-
-    # Cleanup
-    - name: Cleanup - Delete test token
-      awx.awx.token:
-        description: 'Token for testing bug #1029'
-        state: absent
-        controller_host: "https://10.205.212.145"
-        controller_username: "admin"
-        controller_password: "admin"
-        validate_certs: false
-        existing_token: "{{ token_result.ansible_facts.tower_token.token }}"
+        msg:
+          - "========== Result WITH set_fact =========="
+          - "Success!"
+          - "Changed: {{ result_with_set_fact.changed | default(false) }}"
