@@ -4,6 +4,10 @@
   connection: local
   gather_facts: false
 
+  collections:
+    - ansible.controller
+    - infra.aap_configuration
+
   tasks:
     # Шаг 1: Получаем токен
     - name: Create OAuth token
