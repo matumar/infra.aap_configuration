@@ -7,7 +7,7 @@
   tasks:
     # Шаг 1: Получаем токен
     - name: Create OAuth token
-      ansible.controller.token:
+      awx.awx.token:
         description: 'Token for testing bug #1029'
         scope: "write"
         state: present
@@ -82,7 +82,7 @@
 
     # Cleanup
     - name: Cleanup - Delete test token
-      ansible.controller.token:
+      awx.awx.token:
         description: 'Token for testing bug #1029'
         state: absent
         controller_host: "https://10.205.212.145"
