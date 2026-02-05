@@ -4,10 +4,6 @@
   connection: local
   gather_facts: false
 
-  environment:
-    TOWER_VERIFY_SSL: "false"
-    CONTROLLER_VERIFY_SSL: "false"
-
   vars:
     aap_hostname: "{{ aap_hostname | default('https://10.205.212.145') }}"
     aap_validate_certs: "{{ aap_validate_certs | default(false) }}"
@@ -24,58 +20,64 @@
         msg: "CONTROLLER_OAUTH_TOKEN variable is not set!"
       when: env_token | length == 0
 
-    # Шаг 1: НЕПРАВИЛЬНЫЙ способ
+    # Шаг 1: НЕПРАВИЛЬНЫЙ способ - передача через vars
     - name: Try to use token via vars (WILL FAIL intermittently)
       vars:
         aap_token: "{{ env_token }}"
         controller_organizations:
           - name: "Bug Test Org"
-        controller_projects:
-          - name: "Bug Test Project"
-            organization: "Bug Test Org"
-            scm_type: "git"
-            scm_url: "https://github.com/ansible/ansible-tower-samples"
+            description: "Testing token bug without set_fact"
         controller_credentials:
           - name: "Bug Test Credential"
             credential_type: "Machine"
             organization: "Bug Test Org"
       include_role:
         name: "{{ item }}"
-        apply:
-          vars:
-            # Убедитесь что переменные видны внутри роли
-            ansible_search_path: "{{ playbook_dir }}/../roles"
       loop:
         - controller_organizations
-        - controller_projects
-        - controller_credentials
+        - controller_credentials  # Убрали projects!
       ignore_errors: true
       register: result_without_set_fact
 
-    # Шаг 2: ПРАВИЛЬНЫЙ способ
+    - name: Show result without set_fact
+      ansible.builtin.debug:
+        msg:
+          - "========== Result WITHOUT set_fact =========="
+          - "Failed: {{ result_without_set_fact.failed | default(false) }}"
+          - "Changed: {{ result_without_set_fact.changed | default(false) }}"
+
+    # Шаг 2: ПРАВИЛЬНЫЙ способ - через set_fact
     - name: Set token as fact (CORRECT WAY)
       ansible.builtin.set_fact:
         aap_token: "{{ env_token }}"
         controller_organizations:
           - name: "Bug Test Org Fixed"
-        controller_projects:
-          - name: "Bug Test Project Fixed"
-            organization: "Bug Test Org Fixed"
-            scm_type: "git"
-            scm_url: "https://github.com/ansible/ansible-tower-samples"
+            description: "Testing with set_fact workaround"
         controller_credentials:
           - name: "Bug Test Credential Fixed"
             credential_type: "Machine"
             organization: "Bug Test Org Fixed"
 
-    - name: Use roles with set_fact
+    - name: Use roles with set_fact (should work)
       include_role:
         name: "{{ item }}"
       loop:
         - controller_organizations
-        - controller_projects
-        - controller_credentials
+        - controller_credentials  # Убрали projects!
+      register: result_with_set_fact
 
-    - name: Show success
+    - name: Show result with set_fact
       ansible.builtin.debug:
-        msg: "Test completed!"
+        msg:
+          - "========== Result WITH set_fact =========="
+          - "Success!"
+          - "Changed: {{ result_with_set_fact.changed | default(false) }}"
+
+    - name: Summary
+      ansible.builtin.debug:
+        msg:
+          - "========== BUG REPRODUCTION SUMMARY =========="
+          - "Without set_fact failed: {{ result_without_set_fact.failed | default(false) }}"
+          - "With set_fact worked: {{ not (result_with_set_fact.failed | default(false)) }}"
+          - ""
+          - "Bug #1029 reproduced: {{ result_without_set_fact.failed | default(false) and not (result_with_set_fact.failed | default(false)) }}"
