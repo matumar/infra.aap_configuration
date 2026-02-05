@@ -32,7 +32,7 @@
 
     - name: Organizations | Wait for finish the configuration
       ansible.builtin.include_role:
-        name: infra.aap_configuration.collect_async_status
+        name: collect_async_status
       loop: "{{ __gateway_organizations_job_async.results }}"
       loop_control:
         loop_var: __gateway_organizations_job_async_results_item
@@ -98,7 +98,7 @@
         - not ansible_check_mode
         - __organizations_job_async_results_item.ansible_job_id is defined
       ansible.builtin.include_role:
-        name: infra.aap_configuration.collect_async_status
+        name: collect_async_status
       loop: "{{ __organizations_job_async.results }}"
       loop_control:
         loop_var: __organizations_job_async_results_item

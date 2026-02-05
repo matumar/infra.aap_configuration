@@ -37,7 +37,7 @@
         - not ansible_check_mode
         - __gateway_teams_job_async_results_item.ansible_job_id is defined
       ansible.builtin.include_role:
-        name: infra.aap_configuration.collect_async_status
+        name: collect_async_status
       loop: "{{ __gateway_teams_job_async.results }}"
       loop_control:
         loop_var: __gateway_teams_job_async_results_item

@@ -60,7 +60,7 @@
         - not ansible_check_mode
         - __workflows_node_async_results_item.ansible_job_id is defined
       ansible.builtin.include_role:
-        name: infra.aap_configuration.collect_async_status
+        name: collect_async_status
       loop: "{{ __workflows_node_async.results }}"
       loop_control:
         loop_var: __workflows_node_async_results_item
@@ -117,7 +117,7 @@
         - not ansible_check_mode
         - __workflows_link_async_results_item.ansible_job_id is defined
       ansible.builtin.include_role:
-        name: infra.aap_configuration.collect_async_status
+        name: collect_async_status
       loop: "{{ __workflows_link_async.results }}"
       loop_control:
         loop_var: __workflows_link_async_results_item
