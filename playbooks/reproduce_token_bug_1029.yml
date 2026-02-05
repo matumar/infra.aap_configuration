@@ -4,6 +4,10 @@
   connection: local
   gather_facts: false
 
+  environment:
+    TOWER_VERIFY_SSL: "false"
+    CONTROLLER_VERIFY_SSL: "false"
+
   vars:
     aap_hostname: "{{ aap_hostname | default('https://10.205.212.145') }}"
     aap_validate_certs: "{{ aap_validate_certs | default(false) }}"
